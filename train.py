@@ -14,22 +14,13 @@ from tqdm import tqdm
 from mssd.models.sample_net import SampleNet
 from mssd.data import get_data_loaders
 
+
 def score_function(engine):
     val_loss = engine.state.metrics['nll']
     return -val_loss
 
-def run(cfg):
-    train_loader, val_loader = get_data_loaders(cfg["training"]["batch_size"],
-                                                cfg["validate"]["batch_size"])
-    model = SampleNet()
-    device = 'cpu'
 
-    if torch.cuda.is_available():
-        device = 'cuda'
-
-    optimizer = SGD(model.parameters(),
-                    lr=cfg["training"]["lr"],
-                    momentum=cfg["training"]["momentum"])
+def train(cfg, model, train_loader, val_loader, optimizer, device):
     trainer = create_supervised_trainer(model, optimizer, F.nll_loss, device=device)
     evaluator = create_supervised_evaluator(model,
                                             metrics={'accuracy': Accuracy(),
@@ -85,6 +76,25 @@ def run(cfg):
     pbar.close()
 
 
+def main(cfg):
+    train_loader, val_loader = get_data_loaders(cfg["training"]["batch_size"],
+                                                cfg["validate"]["batch_size"])
+    model = SampleNet()
+    device = 'cpu'
+
+    if torch.cuda.is_available():
+        device = 'cuda'
+
+    optimizer = SGD(model.parameters(),
+                    lr=cfg["training"]["lr"],
+                    momentum=cfg["training"]["momentum"])
+
+    train(cfg, model=model, train_loader=train_loader, val_loader=val_loader, optimizer=optimizer, device=device)
+
+    # # Save model
+    torch.save(model.state_dict(), './checkpoints/final_weights.pth')
+
+
 if __name__ == "__main__":
     parser = argparse.ArgumentParser(description="config")
     parser.add_argument(
@@ -100,4 +110,4 @@ if __name__ == "__main__":
     with open(args.config) as fp:
         cfg = yaml.load(fp, Loader=yaml.SafeLoader)
 
-    run(cfg)
+    main(cfg)
