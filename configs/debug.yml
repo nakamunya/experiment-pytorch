@@ -12,3 +12,6 @@ log:
     interval: 10
 validate:
     batch_size: 1000
+checkpoint:
+    path: './checkpoints'
+    prefix: 'sample'

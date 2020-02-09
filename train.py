@@ -6,6 +6,7 @@ from torch.optim import SGD
 import torch.nn.functional as F
 
 from ignite.engine import Events, create_supervised_trainer, create_supervised_evaluator
+from ignite.handlers import ModelCheckpoint, EarlyStopping
 from ignite.metrics import Accuracy, Loss
 
 from tqdm import tqdm
@@ -13,6 +14,9 @@ from tqdm import tqdm
 from mssd.models.sample_net import SampleNet
 from mssd.data import get_data_loaders
 
+def score_function(engine):
+    val_loss = engine.state.metrics['nll']
+    return -val_loss
 
 def run(cfg):
     train_loader, val_loader = get_data_loaders(cfg["training"]["batch_size"],
@@ -66,6 +70,16 @@ def run(cfg):
             .format(engine.state.epoch, avg_accuracy, avg_nll))
 
         pbar.n = pbar.last_print_n = 0
+
+    # # Checkpoint setting
+    # ./checkpoints/sample_mymodel_{step_number}
+    handler = ModelCheckpoint(dirname=cfg["checkpoint"]["path"], filename_prefix=cfg["checkpoint"]["prefix"], n_saved=3, create_dir=True)
+    trainer.add_event_handler(Events.EPOCH_COMPLETED(every=2), handler, {'mymodel': model})
+
+    # # Early stopping
+    handler = EarlyStopping(patience=5, score_function=score_function, trainer=trainer)
+    # Note: the handler is attached to an *Evaluator* (runs one epoch on validation dataset)
+    evaluator.add_event_handler(Events.COMPLETED, handler)
 
     trainer.run(train_loader, max_epochs=cfg["training"]["epoch"])
     pbar.close()
