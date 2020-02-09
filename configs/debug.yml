@@ -1,0 +1,14 @@
+model:
+    arch: vgg
+data:
+    dataset: voc
+    path: '/content/drive/My Drive/ML/data/VOCdevkit/VOC2012'
+training:
+    batch_size: 16
+    epoch: 100
+    lr: 1.0e-2
+    momentum: 0.5
+log:
+    interval: 10
+validate:
+    batch_size: 1000
