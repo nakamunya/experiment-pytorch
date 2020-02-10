@@ -64,7 +64,7 @@ def train(cfg, model, train_loader, val_loader, optimizer, device):
 
     # # Checkpoint setting
     # ./checkpoints/sample_mymodel_{step_number}
-    handler = ModelCheckpoint(dirname=cfg["checkpoint"]["path"], filename_prefix=cfg["checkpoint"]["prefix"], n_saved=3, create_dir=True)
+    handler = ModelCheckpoint(dirname=cfg["checkpoint"]["path"], filename_prefix=cfg["checkpoint"]["prefix"], n_saved=3, create_dir=True, require_empty=False)
     trainer.add_event_handler(Events.EPOCH_COMPLETED(every=2), handler, {'mymodel': model})
 
     # # Early stopping
