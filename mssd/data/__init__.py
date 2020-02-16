@@ -18,7 +18,7 @@ def get_data_loaders(cfg):
     validate_dataset = build_dataset(cfg, validate_dataset_list, transform=validate_transform, target_transform=None, is_train=False)
 
     train_loader = DataLoader(train_dataset,
-                                batch_size=cfg["train"]["batch_size"],
+                                batch_size=cfg["training"]["batch_size"],
                                 shuffle=True,
                                 num_workers=cfg["data_loader"]["num_workers"])
     
