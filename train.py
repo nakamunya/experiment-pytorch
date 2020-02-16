@@ -1,9 +1,9 @@
 import argparse
-import torch
 import yaml
 
-from torch.optim import SGD
+import torch
 import torch.nn.functional as F
+from torch.optim import SGD
 
 from ignite.engine import Events, create_supervised_trainer, create_supervised_evaluator
 from ignite.handlers import ModelCheckpoint, EarlyStopping
@@ -20,7 +20,7 @@ def score_function(engine):
     return -val_loss
 
 
-def train(cfg, model, train_loader, val_loader, optimizer, device):
+def train(cfg, model, train_loader, validate_loader, optimizer, device):
     trainer = create_supervised_trainer(model, optimizer, F.nll_loss, device=device)
     evaluator = create_supervised_evaluator(model,
                                             metrics={'accuracy': Accuracy(),
@@ -52,7 +52,7 @@ def train(cfg, model, train_loader, val_loader, optimizer, device):
 
     @trainer.on(Events.EPOCH_COMPLETED)
     def log_validation_results(engine):
-        evaluator.run(val_loader)
+        evaluator.run(validate_loader)
         metrics = evaluator.state.metrics
         avg_accuracy = metrics['accuracy']
         avg_nll = metrics['nll']
@@ -77,11 +77,12 @@ def train(cfg, model, train_loader, val_loader, optimizer, device):
 
 
 def main(cfg):
-    train_loader, val_loader = get_data_loaders(cfg["training"]["batch_size"],
-                                                cfg["validate"]["batch_size"])
-    model = SampleNet()
-    device = 'cpu'
+    train_loader, validate_loader = get_data_loaders(cfg)
+    # train_loader = make_data_loader(cfg, is_train=True)
 
+    model = SampleNet()
+    
+    device = 'cpu'
     if torch.cuda.is_available():
         device = 'cuda'
 
@@ -89,14 +90,14 @@ def main(cfg):
                     lr=cfg["training"]["lr"],
                     momentum=cfg["training"]["momentum"])
 
-    train(cfg, model=model, train_loader=train_loader, val_loader=val_loader, optimizer=optimizer, device=device)
+    train(cfg, model=model, train_loader=train_loader, validate_loader=validate_loader, optimizer=optimizer, device=device)
 
     # # Save model
     torch.save(model.state_dict(), './checkpoints/final_weights.pth')
 
 
 if __name__ == "__main__":
-    parser = argparse.ArgumentParser(description="config")
+    parser = argparse.ArgumentParser(description='Single Shot MultiBox Detector')
     parser.add_argument(
         "--config",
         nargs="?",
