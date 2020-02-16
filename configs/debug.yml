@@ -1,8 +1,12 @@
 model:
     arch: vgg
-data_set:
+datasets:
     name: voc
-    path: '/content/drive/My Drive/ML/data/VOCdevkit/VOC2012'
+    path: '/content/drive/My Drive/ML/data/VOCdevkit'
+    train: ("voc_2012_trainval", )
+    test: ("voc_2012_val", )
+input:
+    size: 300
 data_loader:
     num_workers: 8
 train:
