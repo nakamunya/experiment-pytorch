@@ -11,8 +11,9 @@ from ignite.metrics import Accuracy, Loss
 
 from tqdm import tqdm
 
-from mssd.models.sample_net import SampleNet
 from mssd.data import get_data_loaders
+from mssd.models.ssd_detector import SSDDetector
+from mssd.models.modules.multibox_loss import MultiboxLoss
 
 
 def score_function(engine):
@@ -20,11 +21,11 @@ def score_function(engine):
     return -val_loss
 
 
-def train(cfg, model, train_loader, validate_loader, optimizer, device):
-    trainer = create_supervised_trainer(model, optimizer, F.nll_loss, device=device)
+def train(cfg, model, train_loader, validate_loader, optimizer, criterion, device):
+    trainer = create_supervised_trainer(model, optimizer, criterion, device=device)
     evaluator = create_supervised_evaluator(model,
                                             metrics={'accuracy': Accuracy(),
-                                                    'nll': Loss(F.nll_loss)},
+                                                    'nll': Loss(criterion)},
                                             device=device)
 
     desc = "ITERATION - loss: {:.2f}"
@@ -78,19 +79,21 @@ def train(cfg, model, train_loader, validate_loader, optimizer, device):
 
 def main(cfg):
     train_loader, validate_loader = get_data_loaders(cfg)
-    # train_loader = make_data_loader(cfg, is_train=True)
 
-    model = SampleNet()
+    model = SSDDetector(cfg)
     
     device = 'cpu'
     if torch.cuda.is_available():
         device = 'cuda'
 
+    criterion = MultiboxLoss(cfg, iou_threshold=0.5, neg_pos_ratio=3,
+                             center_variance=0.1, size_variance=0.2, device=device)
+
     optimizer = SGD(model.parameters(),
                     lr=cfg["training"]["lr"],
                     momentum=cfg["training"]["momentum"])
 
-    train(cfg, model=model, train_loader=train_loader, validate_loader=validate_loader, optimizer=optimizer, device=device)
+    train(cfg, model=model, train_loader=train_loader, validate_loader=validate_loader, optimizer=optimizer, criterion=criterion, device=device)
 
     # # Save model
     torch.save(model.state_dict(), './checkpoints/final_weights.pth')

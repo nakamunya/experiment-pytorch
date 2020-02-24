@@ -1,4 +1,4 @@
-from mssd.modeling.anchors.prior_box import PriorBox
+from mssd.models.functions.prior_box import PriorBox
 from .target_transform import SSDTargetTransform
 from .transforms import *
 

@@ -1,5 +1,7 @@
 model:
     arch: vgg
+    num_classes: 21
+    pretrain: True
 datasets:
     name: voc
     path: '/content/drive/My Drive/ML/data/VOCdevkit'
