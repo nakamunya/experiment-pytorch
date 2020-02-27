@@ -18,7 +18,7 @@ class SSDDetector(nn.Module):
         if cfg["model"]["pretrain"]:
             self.backbone.init_from_pretrain(load_state_dict_from_url(model_urls['vgg']))
 
-    def forward(self, images, targets=None):
+    def forward(self, images):
         features = self.backbone(images)
         out = self.boxhead(features)
         return out

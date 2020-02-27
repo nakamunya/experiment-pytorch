@@ -23,10 +23,7 @@ def score_function(engine):
 
 def train(cfg, model, train_loader, validate_loader, optimizer, criterion, device):
     trainer = create_supervised_trainer(model, optimizer, criterion, device=device)
-    evaluator = create_supervised_evaluator(model,
-                                            metrics={'accuracy': Accuracy(),
-                                                    'nll': Loss(criterion)},
-                                            device=device)
+    evaluator = create_supervised_evaluator(model, metrics={'accuracy': Accuracy(), 'nll': Loss(criterion)}, device=device)
 
     desc = "ITERATION - loss: {:.2f}"
     pbar = tqdm(
