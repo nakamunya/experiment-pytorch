@@ -13,7 +13,7 @@ from tqdm import tqdm
 
 from mssd.data import get_data_loaders
 from mssd.models.ssd_detector import SSDDetector
-from mssd.models.modules.multibox_loss import MultiboxLoss
+from mssd.models.box_head.loss import MultiBoxLoss
 
 
 def score_function(engine):
@@ -83,8 +83,7 @@ def main(cfg):
     if torch.cuda.is_available():
         device = 'cuda'
 
-    criterion = MultiboxLoss(cfg, iou_threshold=0.5, neg_pos_ratio=3,
-                             center_variance=0.1, size_variance=0.2, device=device)
+    criterion = MultiBoxLoss()
 
     optimizer = SGD(model.parameters(),
                     lr=cfg["training"]["lr"],
